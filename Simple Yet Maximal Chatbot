@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Sederhana namun Maksimal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 400px;
+            height: 600px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .chat-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .chat-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            background: #4cd137;
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: #4facfe;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        .chat-input button {
+            background: #4facfe;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .chat-input button:hover {
+            background: #3a9bf5;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin-top: 5px;
+            padding: 10px;
+            background: white;
+            border-radius: 18px;
+            align-self: flex-start;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #888;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: typingAnimation 1.5s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes typingAnimation {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-container {
+                height: 100%;
+                border-radius: 0;
+            }
+            
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>ChatBot AI</h1>
+            <p>Saya di sini untuk membantu Anda</p>
+            <div class="status-indicator"></div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                Halo! Saya adalah chatbot sederhana. Ada yang bisa saya bantu?
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+        
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Ketik pesan Anda di sini...">
+            <button id="sendButton">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatMessages = document.getElementById('chatMessages');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const typingIndicator = document.getElementById('typingIndicator');
+            
+            // Fokus ke input saat halaman dimuat
+            userInput.focus();
+            
+            // Fungsi untuk menambahkan pesan pengguna
+            function addUserMessage(message) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', 'user-message');
+                messageElement.textContent = message;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Fungsi untuk menambahkan pesan bot
+            function addBotMessage(message) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('message', 'bot-message');
+                messageElement.textContent = message;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Fungsi untuk menampilkan indikator typing
+            function showTypingIndicator() {
+                typingIndicator.style.display = 'flex';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Fungsi untuk menyembunyikan indikator typing
+            function hideTypingIndicator() {
+                typingIndicator.style.display = 'none';
+            }
+            
+            // Fungsi untuk menghasilkan respons bot
+            function generateBotResponse(userMessage) {
+                // Konversi pesan pengguna ke huruf kecil untuk memudahkan pemrosesan
+                const message = userMessage.toLowerCase();
+                
+                // Respons berdasarkan kata kunci
+                if (message.includes('halo') || message.includes('hai') || message.includes('hi')) {
+                    return "Halo! Senang berbicara dengan Anda. Ada yang bisa saya bantu?";
+                } else if (message.includes('nama')) {
+                    return "Saya adalah ChatBot AI, asisten virtual yang siap membantu Anda.";
+                } else if (message.includes('help') || message.includes('bantuan')) {
+                    return "Saya bisa membantu menjawab pertanyaan, memberikan informasi, atau sekadar mengobrol. Coba tanyakan sesuatu!";
+                } else if (message.includes('terima kasih') || message.includes('thanks')) {
+                    return "Sama-sama! Senang bisa membantu.";
+                } else if (message.includes('bye') || message.includes('selamat tinggal')) {
+                    return "Selamat tinggal! Semoga harimu menyenangkan.";
+                } else if (message.includes('cuaca')) {
+                    return "Saya tidak memiliki akses ke data cuaca saat ini, tapi semoga cerah di tempat Anda!";
+                } else if (message.includes('berita') || message.includes('news')) {
+                    return "Saya belum terhubung dengan layanan berita, tapi saya sarankan untuk mengunjungi situs berita terpercaya untuk informasi terkini.";
+                } else if (message.includes('how are you') || message.includes('apa kabar')) {
+                    return "Saya baik-baik saja, terima kasih! Bagaimana dengan Anda?";
+                } else if (message.includes('baik') || message.includes('good')) {
+                    return "Senang mendengarnya! Ada lagi yang bisa saya bantu?";
+                } else if (message.includes('love') || message.includes('cinta')) {
+                    return "Itu sangat manis! 💖";
+                } else if (message.includes('harga') || message.includes('price')) {
+                    return "Maaf, saya tidak memiliki informasi harga terkini. Anda mungkin perlu mengecek langsung ke penyedia layanan.";
+                } else if (message.includes('jam') || message.includes('time')) {
+                    const now = new Date();
+                    return `Sekarang jam ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}.`;
+                } else if (message.includes('hari')) {
+                    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                    const today = new Date().getDay();
+                    return `Hari ini adalah hari ${days[today]}.`;
+                } else if (message.includes('chatbot') || message.includes('ai')) {
+                    return "Chatbot adalah program komputer yang dirancang untuk mensimulasikan percakapan dengan manusia. Saya adalah contohnya!";
+                } else if (message.includes('?') || message.includes('apa ') || message.includes('bagaimana ') || message.includes('mengapa ')) {
+                    return "Itu pertanyaan yang menarik! Sayangnya, saya hanya chatbot sederhana dan mungkin tidak bisa menjawabnya dengan lengkap.";
+                } else {
+                    // Jika tidak ada kata kunci yang dikenali, berikan respons acak
+                    const randomResponses = [
+                        "Saya mengerti, teruskan...",
+                        "Menarik! Ada lagi yang ingin Anda ceritakan?",
+                        "Saya mendengarkan...",
+                        "Beri tahu saya lebih banyak tentang itu.",
+                        "Bagus! Ada hal lain yang ingin Anda tanyakan?",
+                        "Saya belum sepenuhnya memahami, bisakah Anda menjelaskannya dengan cara lain?",
+                        "Itu informasi yang berguna!",
+                        "Teruskan, saya tertarik dengan apa yang Anda katakan.",
+                        "Wow, itu menarik!",
+                        "Saya mencatatnya. Ada lagi?"
+                    ];
+                    return randomResponses[Math.floor(Math.random() * randomResponses.length)];
+                }
+            }
+            
+            // Fungsi untuk menangani pengiriman pesan
+            function handleSendMessage() {
+                const message = userInput.value.trim();
+                
+                if (message !== "") {
+                    // Tambahkan pesan pengguna
+                    addUserMessage(message);
+                    
+                    // Kosongkan input
+                    userInput.value = "";
+                    
+                    // Tampilkan indikator typing
+                    showTypingIndicator();
+                    
+                    // Generate respons bot setelah jeda acak (1-3 detik)
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        const botResponse = generateBotResponse(message);
+                        addBotMessage(botResponse);
+                    }, 1000 + Math.random() * 2000);
+                }
+            }
+            
+            // Event listener untuk tombol kirim
+            sendButton.addEventListener('click', handleSendMessage);
+            
+            // Event listener untuk tombol Enter
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSendMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
